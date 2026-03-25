@@ -1,0 +1,38 @@
+{
+  "curriculum_output": {
+    "id": "string",
+    "topic": "string",
+    "explanation": {
+      "title": "string",
+      "learning_objectives": ["string"],
+      "content_sections": [
+        {
+          "title": "string",
+          "content": "string",
+          "key_concepts": ["string"]
+        }
+      ]
+    },
+    "animation_script": {
+      "title": "string",
+      "scenes": [
+        {
+          "scene_number": "integer",
+          "duration": "integer (seconds)",
+          "description": "string",
+          "visuals": ["string"],
+          "narration": "string"
+        }
+      ]
+    },
+    "audio": {
+      "narration_file": "string",
+      "duration": "integer (seconds)"
+    },
+    "metadata": {
+      "created_at": "datetime",
+      "duration_total": "integer (seconds)",
+      "language": "string"
+    }
+  }
+}
