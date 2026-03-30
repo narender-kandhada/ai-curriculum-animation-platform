@@ -1,18 +1,14 @@
-"""
-Text-to-speech service
-"""
-
+from gtts import gTTS
 
 class TTSService:
-    """Service for text-to-speech synthesis"""
-    
-    def __init__(self):
-        self.engine = None
-    
-    def synthesize(self, text: str, voice: str = "default") -> bytes:
-        """Convert text to speech audio"""
-        pass
-    
-    def get_available_voices(self) -> list:
-        """Get list of available voices"""
-        pass
+    def generate_audio(self, text):
+        file = "output.mp3"
+        tts = gTTS(text)
+        tts.save(file)
+        return f"Audio saved as {file}"pip
+from gtts import gTTS
+
+tts = gTTS(script)
+tts.save("story.mp3")
+
+print("🎤 Audio created")

@@ -1,23 +1,13 @@
-"""
-Model inference service
-"""
+from openai import OpenAI
 
-import asyncio
-from typing import Optional, Dict, Any
-
+client = OpenAI(api_key="AIzaSyA04CSgXUkG2TwilOqg-0jawJzY8UUoH28")
 
 class ModelService:
-    """Service for model inference"""
-    
-    def __init__(self):
-        self.model = None
-        self.tokenizer = None
-    
-    async def generate(self, prompt: str, **kwargs) -> str:
-        """Generate output from prompt"""
-        # TODO: Load model and generate
-        return ""
-    
-    def load_model(self, model_path: str):
-        """Load pre-trained model"""
-        pass
+    async def generate(self, prompt, **kwargs):
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.choices[0].message.content
