@@ -21,13 +21,14 @@ backend/
 │   ├── core/                 # Config, settings, constants
 │   └── utils/                # Utility helpers
 ├── main.py                   # Root entry: OCR + script generation pipeline
-├── ai.py                     # Groq LLM client & generate_script()
+├── ai.py                     # Groq LLM client & generate_script() — loads key from .env
 ├── ocr.py                    # Tesseract OCR — extract_text()
-├── db.py                     # Database connection setup
-├── key.py                    # API key / secrets loader
+├── db.py                     # MongoDB connection — loads URI from .env
+├── key.py                    # Legacy upload route (OCR → script)
 ├── test.py                   # Manual test scripts
 ├── Dockerfile                # Docker image definition
 ├── requirements.txt          # Python dependencies
+├── .env                      # Environment variables (not committed to git)
 └── README.md                 # You are here
 ```
 
@@ -35,15 +36,16 @@ backend/
 
 ## ⚙️ Tech Stack
 
-| Layer        | Technology                              |
-|-------------|------------------------------------------|
-| Framework   | [FastAPI](https://fastapi.tiangolo.com/) |
-| LLM         | [Groq](https://groq.com/) — LLaMA 3.3 70B Versatile |
+| Layer        | Technology                                           |
+|-------------|-------------------------------------------------------|
+| Framework   | [FastAPI](https://fastapi.tiangolo.com/)              |
+| LLM         | [Groq](https://groq.com/) — LLaMA 3.3 70B Versatile  |
 | OCR         | [Tesseract](https://github.com/tesseract-ocr/tesseract) via `pytesseract` |
 | TTS         | [gTTS](https://gtts.readthedocs.io/) (Google Text-to-Speech) |
-| Validation  | [Pydantic v2](https://docs.pydantic.dev/) |
-| Server      | [Uvicorn](https://www.uvicorn.org/) (ASGI) |
-| Container   | Docker (Python 3.11 slim) |
+| Database    | [MongoDB](https://www.mongodb.com/) via `pymongo`     |
+| Validation  | [Pydantic v2](https://docs.pydantic.dev/)             |
+| Server      | [Uvicorn](https://www.uvicorn.org/) (ASGI)            |
+| Container   | Docker (Python 3.11 slim)                             |
 
 ---
 
@@ -52,7 +54,7 @@ backend/
 ### 1. Clone & enter the backend directory
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/narender-kandhada/ai-curriculum-animation-platform.git
 cd ai-curriculum-animation-platform/backend
 ```
 
@@ -74,12 +76,19 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-> **Note:** `torch` and `transformers` are large packages. Ensure you have enough disk space (~3–5 GB).
+> **Note:** `torch` and `transformers` are large packages (~3–5 GB). Ensure sufficient disk space.
 
-### 4. Configure environment / API keys
+### 4. Configure environment variables
 
-- Set your **Groq API key** in `key.py` or via an environment variable `GROQ_API_KEY`.
-- Ensure [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) is installed on your system and available in `PATH`.
+Create a `.env` file in the `backend/` directory (already in `.gitignore`):
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+MONGO_URI=mongodb://localhost:27017/
+```
+
+- Get your free Groq API key at [console.groq.com](https://console.groq.com)
+- Install [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) (Windows) and ensure it's in your `PATH`
 
 ### 5. Run the development server
 
@@ -87,9 +96,8 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at: **http://localhost:8000**
-
-Interactive API docs: **http://localhost:8000/docs**
+- API: **http://localhost:8000**  
+- Interactive docs: **http://localhost:8000/docs**
 
 ---
 
@@ -104,7 +112,7 @@ docker build -t ai-curriculum-backend .
 ### Run the container
 
 ```bash
-docker run -p 8000:8000 ai-curriculum-backend
+docker run --env-file .env -p 8000:8000 ai-curriculum-backend
 ```
 
 ---
@@ -112,7 +120,7 @@ docker run -p 8000:8000 ai-curriculum-backend
 ## 📡 API Endpoints
 
 ### `GET /`
-Health check endpoint.
+Health check.
 
 **Response:**
 ```json
@@ -122,9 +130,9 @@ Health check endpoint.
 ---
 
 ### `POST /upload/`
-Upload an image file; the backend extracts text via OCR and generates an animation script.
+Upload an image — extracts text via OCR and generates an animation script.
 
-**Request:** `multipart/form-data` with a field `file` (image).
+**Request:** `multipart/form-data` with field `file` (image).
 
 **Response:**
 ```json
@@ -137,7 +145,7 @@ Upload an image file; the backend extracts text via OCR and generates an animati
 ---
 
 ### `POST /api/generate`
-Send a text prompt directly to trigger the full generation pipeline (LLM → Animation → TTS).
+Send a text prompt to trigger the full AI pipeline (LLM → Animation → TTS).
 
 **Request body:**
 ```json
@@ -160,55 +168,55 @@ Send a text prompt directly to trigger the full generation pipeline (LLM → Ani
 
 ## 🧪 Testing
 
-Run the manual test script:
-
 ```bash
 python test.py
 ```
 
-Or use the interactive Swagger UI at `http://localhost:8000/docs`.
+Or use the Swagger UI at `http://localhost:8000/docs`.
 
 ---
 
 ## 🔑 Environment Variables
 
-| Variable        | Description                          | Default      |
-|----------------|--------------------------------------|--------------|
-| `GROQ_API_KEY` | API key for Groq LLM service         | *(required)* |
-| `HOST`         | Server bind address                  | `0.0.0.0`    |
-| `PORT`         | Server port                          | `8000`       |
+| Variable        | Description                        | Default                        |
+|----------------|------------------------------------|--------------------------------|
+| `GROQ_API_KEY` | Groq LLM API key                   | *(required)*                   |
+| `MONGO_URI`    | MongoDB connection string          | `mongodb://localhost:27017/`   |
 
-> ⚠️ **Security Warning:** Do not hardcode API keys in source files. Use `.env` files or environment variables and add them to `.gitignore`.
+> ⚠️ Never commit `.env` to version control. It is already excluded via `.gitignore`.
 
 ---
 
-## 📦 Key Dependencies
+## 📦 Dependencies
 
 ```
-fastapi==0.104.1
-uvicorn==0.24.0
-pydantic==2.5.0
+fastapi==0.104.1        # Web framework
+uvicorn==0.24.0         # ASGI server
+pydantic==2.5.0         # Data validation
 pydantic-settings==2.1.0
-torch==2.1.0
-transformers==4.35.0
-peft==0.7.0
-pytesseract
-Pillow
-groq
-python-multipart
-gtts
+torch==2.1.0            # ML framework
+transformers==4.35.0    # HuggingFace models
+peft==0.7.0             # Parameter-efficient fine-tuning
+pytesseract             # OCR wrapper
+Pillow                  # Image processing
+groq                    # Groq LLM client
+python-multipart        # File upload support
+python-dotenv           # Load .env variables
+pymongo                 # MongoDB driver
+gtts                    # Google Text-to-Speech
 ```
 
 ---
 
 ## 🛠️ Development Notes
 
-- CORS is currently set to `allow_origins=["*"]` — **restrict this in production**.
-- The `output.txt` and `output.mp3` files are written to the working directory on each generation request.
-- Tesseract must be installed separately from pip. Download it from [here](https://github.com/UB-Mannheim/tesseract/wiki) (Windows) or via your system package manager.
+- CORS is set to `allow_origins=["*"]` — **restrict this in production**
+- `output.txt` and `output.mp3` are written to the working directory on each generation
+- Tesseract must be installed separately: [Windows installer](https://github.com/UB-Mannheim/tesseract/wiki)
+- MongoDB must be running locally or provide a cloud URI (e.g., MongoDB Atlas)
 
 ---
 
 ## 📄 License
 
-This project is part of the **AI Curriculum Animation Platform**. See the root-level `LICENSE` file for details.
+Part of the **AI Curriculum Animation Platform**. See root-level `LICENSE` for details.

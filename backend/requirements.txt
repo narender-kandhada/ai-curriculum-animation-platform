@@ -9,3 +9,6 @@ pytesseract
 Pillow
 groq
 python-multipart
+python-dotenv
+pymongo
+gtts

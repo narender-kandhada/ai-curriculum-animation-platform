@@ -48,3 +48,7 @@ models/fine_tuned/
 # Data
 data/processed/
 data/formatted/
+
+#Backend
+backend/.env
+backend/venv
